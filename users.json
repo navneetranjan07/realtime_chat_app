@@ -1,0 +1,14 @@
+[
+  {
+    "email": "ridestatus07@gmail.com",
+    "passwordHash": "$2b$10$cIBfB5XUrpksuR7BSdpF3.dqcAt0Ze2rZot57q/j4L/ip2fZY8WuK"
+  },
+  {
+    "email": "nishant1100kumar@gmail.com",
+    "passwordHash": "$2b$10$LZFZklM9EApfegVa17O1nO.Eeqq06O5VFF0Se6qMu0sPgIP.mB00a"
+  },
+  {
+    "email": "admin@gmail.com",
+    "passwordHash": "$2b$10$urFUqrI8E1bV2uPVr8j5cOpfEzve21O3K75IV0MzLADESabHKdncG"
+  }
+]
