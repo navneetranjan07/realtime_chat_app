@@ -9,51 +9,47 @@
 </head>
 <body>
 
-  <!-- Login Section -->
+  <!-- Auth -->
   <div class="login-bg">
     <div id="auth-container">
       <h2 id="form-title">Login to Chat</h2>
       <form id="auth-form">
+        <input type="text" id="username" placeholder="Username" style="display: none" />
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
+        <input type="text" id="otp" placeholder="OTP" style="display: none" />
         <button type="submit">Login</button>
-        <p id="toggle-form">Don’t have an account?
-          <a href="#" id="toggle-link">Sign up</a>
+        <p id="toggle-form">
+          Don’t have an account? <a href="#" id="toggle-link">Sign up</a>
         </p>
+        <button id="request-otp-btn" type="button" style="display: none;">Request OTP</button>
       </form>
       <p id="developer_info">
-        Developed By <a href="https://www.instagram.com/navneetranjan07/" target="_blank" style="text-decoration: none;">
-        <span><i>Navneet Ranjan</i></span></a>
+        Developed By 
+        <a href="https://www.instagram.com/navneetranjan07/" style="text-decoration: none;">
+          <span><i>Navneet Ranjan</i></span>
+        </a>
       </p>
     </div>
   </div>
 
-  <!-- Chat Section -->
+  <!-- Chat -->
   <div class="chat-container" style="display: none;">
     <header>
       <span>sociChat</span>
       <button id="logout-btn">Logout</button>
     </header>
-
-    <ul id="messages" style="scrollbar-width: none;"></ul>
-
-    <!-- Typing Indicator -->
-    <div id="typing-indicator" class="fade"></div>
-
-    <!-- Message Form -->
+    
+    <ul id="messages"></ul>
+    <div id="typing-indicator" style="display: none;">Someone is typing...</div>
+    
     <form id="form" autocomplete="off">
       <input id="input" placeholder="Type a message..." />
-      <button>Send</button>
-    </form>
-
-    <!-- Upload Form -->
-    <form id="uploadForm" enctype="multipart/form-data">
-      <input type="file" id="fileInput" />
-      <button type="submit">Upload</button>
+      <input type="file" id="file-input" />
+      <button type="submit">Send</button>
     </form>
   </div>
 
-  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 </body>

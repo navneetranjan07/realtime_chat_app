@@ -9,132 +9,155 @@ const toggleFormLine = document.getElementById('toggle-form');
 const chatContainer  = document.querySelector('.chat-container');
 const chatForm       = document.getElementById('form');
 const input          = document.getElementById('input');
+const fileInput      = document.getElementById('file-input');
 const messages       = document.getElementById('messages');
 const typingIndicator = document.getElementById('typing-indicator');
-const uploadForm     = document.getElementById('uploadForm');
-const fileInput      = document.getElementById('fileInput');
+const requestOtpBtn  = document.getElementById('request-otp-btn');
 
-// Toggle login/signup mode
+const emailField     = document.getElementById('email');
+const passwordField  = document.getElementById('password');
+const usernameField  = document.getElementById('username');
+const otpField       = document.getElementById('otp');
+
+// --- Toggle between login/signup ---
 toggleLink.addEventListener('click', e => {
   e.preventDefault();
   mode = mode === 'login' ? 'signup' : 'login';
+
   formTitle.textContent = mode === 'login' ? 'Login to Chat' : 'Sign up to Chat';
-  authForm.querySelector('button').textContent = mode === 'login' ? 'Login' : 'Sign up';
+  authForm.querySelector('button').textContent = mode === 'login' ? 'Login' : 'Verify OTP & Signup';
   toggleFormLine.innerHTML = mode === 'login'
     ? `Don’t have an account? <a href="#" id="toggle-link">Sign up</a>`
     : `Already have an account? <a href="#" id="toggle-link">Login</a>`;
+
+  usernameField.style.display = mode === 'signup' ? 'block' : 'none';
+  otpField.style.display      = mode === 'signup' ? 'block' : 'none';
+  requestOtpBtn.style.display = mode === 'signup' ? 'block' : 'none';
+
   toggleFormLine.querySelector('a').addEventListener('click', toggleLink.onclick);
 });
 
-// Auth form submit
-authForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email    = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
+// --- Request OTP ---
+requestOtpBtn.addEventListener('click', async () => {
+  const email = emailField.value.trim();
+  const username = usernameField.value.trim();
 
-  const res = await fetch(`/${mode}`, {
+  if (!email || !username) return alert("Please enter email and username first.");
+
+  const res = await fetch('/signup/request-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, username })
   });
+  const data = await res.json();
+  alert(data.message || (data.success ? 'OTP sent!' : 'Failed to send OTP'));
+});
+
+// --- Auth form submit ---
+authForm.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const email    = emailField.value.trim();
+  const password = passwordField.value.trim();
+  const username = usernameField.value.trim();
+  const otp      = otpField.value.trim();
+
+  let res;
+  if (mode === 'login') {
+    res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+  } else {
+    res = await fetch('/signup/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, username, otp })
+    });
+  }
 
   const data = await res.json();
-  if (!data.success) return alert(data.message || 'Auth failed');
+  if (!data.success) return alert(data.message || 'Authentication failed');
 
   socket = io({ auth: { token: data.token } });
-  socket.user = { email };
   setupSocket();
 
   authContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
 });
 
-// Setup socket events
+// --- Socket Setup ---
 function setupSocket() {
   socket.on('chat message', data => {
     const li = document.createElement('li');
-    const time = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    if (data.fileUrl) {
-      if (data.fileType.startsWith('image')) {
-        li.innerHTML = `<strong>${data.msg}</strong><br>
-                        <img src="${data.fileUrl}" style="max-width: 100%; border-radius: 8px;"><br>
-                        <small>${time}</small>`;
-      } else {
-        li.innerHTML = `<strong>${data.msg}</strong><br>
-                        <a href="${data.fileUrl}" download="${data.fileName}">${data.fileName}</a><br>
-                        <small>${time}</small>`;
-      }
+    if (data.type === 'file') {
+      li.innerHTML = `<strong>${data.username}:</strong> <a href="${data.fileUrl}" target="_blank">${data.originalName}</a>`;
+    } else if (data.type === 'image') {
+      li.innerHTML = `<strong>${data.username}:</strong><br><img src="${data.fileUrl}" alt="Image" />`;
     } else {
-      li.textContent = `${data.msg} (${time})`;
+      li.innerHTML = `<strong>${data.username}:</strong> ${data.msg}`;
     }
 
     messages.appendChild(li);
     messages.scrollTop = messages.scrollHeight;
   });
 
-  socket.on('displayTyping', data => {
-    if (data.email !== socket.user?.email) {
-      typingIndicator.textContent = `${data.email} is typing...`;
-      typingIndicator.classList.add('show');
+  socket.on('typing', ({ username }) => {
+    if (username) {
+      typingIndicator.innerText = `${username} is typing...`;
+      typingIndicator.style.display = 'block';
+    } else {
+      typingIndicator.style.display = 'none';
     }
-  });
-
-  socket.on('removeTyping', () => {
-    typingIndicator.classList.remove('show');
   });
 }
 
-// Chat form submit
-chatForm.addEventListener('submit', e => {
+// --- Chat submit ---
+chatForm.addEventListener('submit', async e => {
   e.preventDefault();
+
   const text = input.value.trim();
-  if (text && socket) {
-    socket.emit('chat message', { msg: text });
-    socket.emit('stopTyping');
+  const file = fileInput.files[0];
+
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      socket.emit('chat message', data.fileData);
+    }
+    fileInput.value = '';
+  }
+
+  if (text) {
+    socket.emit('chat message', { type: 'text', msg: text });
     input.value = '';
   }
 });
 
-// Typing indicator event
-let typingTimer;
+// --- Typing Indicator Logic ---
+let typing = false, timer;
 input.addEventListener('input', () => {
-  if (socket) {
+  if (!typing) {
     socket.emit('typing');
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => {
-      socket.emit('stopTyping');
-    }, 1000);
+    typing = true;
   }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    typing = false;
+    socket.emit('typing', { username: null });
+  }, 1500);
 });
 
-// Upload file form
-uploadForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  if (!fileInput.files[0]) return;
-
-  const formData = new FormData();
-  formData.append('file', fileInput.files[0]);
-
-  const res = await fetch('/upload', {
-    method: 'POST',
-    body: formData
-  });
-
-  const data = await res.json();
-  if (data.success) {
-    socket.emit('chat message', {
-      fileUrl: data.fileUrl,
-      fileName: data.name,
-      fileType: data.type
-    });
-    fileInput.value = '';
-  } else {
-    alert('Upload failed.');
-  }
-});
-
-// Logout
+// --- Logout ---
 document.getElementById('logout-btn').addEventListener('click', () => {
   if (socket) socket.disconnect();
   chatContainer.style.display = 'none';
