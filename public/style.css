@@ -35,27 +35,62 @@ body {
 
 /* ---------- LOGIN PAGE ---------- */
 .login-bg {
-  background: url('assests/login-bg.png');
+background: linear-gradient(135deg, rgba(5, 149, 158, 1.0), rgba(68, 137, 117, 1.0));
+background-size: cover;
+border-radius: 10px;
+height: 100vh;
+display: flex;
+align-items: center;
+}
+
+.master_div{
   background-size: cover;
   border-radius: 20px;
 }
 
+
 #auth-container {
-  background-size: cover;
   padding: 1.5rem 2.5rem;
   gap: 1.2rem;
   border-radius: 20px;
-  backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+#auth-container span1{
+  /* color: yellow; */
+  background: linear-gradient(295deg, rgba(0, 0, 0, 0.618) 27%, rgba(196, 196, 6, 0.607) 100%);
+  background-size: cover;
+  background-clip: text;
+  color: transparent;
+  animation: animate 3s linear infinite;
+
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes animate{
+  to{
+    background-position-x: 120px;
+  }
 }
 
 #auth-container h2 {
-  font-size: 1.3rem;
-  padding: 0.2rem;
+  font-size: 1rem;
+  width: 50%;
   text-align: center;
+  color: rgb(0, 0, 0);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
+  padding: 5px 15px;
 }
 
 #auth-form {
@@ -68,7 +103,7 @@ body {
 }
 
 #auth-form input {
-  padding: 0.55rem 0.75rem;
+  padding: 0.55rem 2.5rem;
   font-size: 1rem;
   border: 1px solid #333;
   border-radius: 5px;
@@ -102,6 +137,9 @@ body.light-theme #auth-form input {
   font-size: 0.9rem;
   color: #000000;
 }
+#toggle-form:hover{
+  cursor: help;
+}
 
 #toggle-form a {
   color: var(--primary);
@@ -109,17 +147,18 @@ body.light-theme #auth-form input {
 }
 
 #developer_info {
-  padding: 5px;
-  margin-top: 40%;
+  padding: 5px 20px;
+  /* margin-top: 40%; */
   border-radius: 10px;
   text-align: center;
-  font-size: 10px;
+  font-size: 0.7rem;
   font-family: monospace;
-  backdrop-filter: blur(20px);
   color: #000;
-  background: #000000;
   background: linear-gradient(295deg, rgba(0, 0, 0, 0.618) 27%, rgba(196, 196, 6, 0.607) 100%);
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+}
+#developer_info:hover{
+  cursor: none;
 }
 
 #developer_info span {
@@ -168,6 +207,22 @@ header {
   background: #c0392b;
 }
 
+#AI_Implementation{
+  background: #e4fd04;
+  color: rgb(0, 0, 0);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: ease-in 0.2s;
+}
+#AI_Implementation:hover {
+  background: #e4fd04a4;
+  transform: scale(1.05);
+  transition: ease-in 0.2s;
+}
+
 /* ---------- MESSAGES ---------- */
 #messages {
   list-style: none;
@@ -206,9 +261,16 @@ header {
 /* ---------- CHAT INPUT ---------- */
 form {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
   border-top: 1px solid #ddd;
+}
+
+.chat_input{
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  backdrop-filter: blur(2px);
 }
 
 input#input {
@@ -234,13 +296,23 @@ input[type="file"] {
   background: transparent;
 }
 
-button {
-  background: var(--primary);
+#file-input{
+  color: black;
+}
+
+button[type='submit']{
   color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
+  border-radius: 50%;
+  padding: 0.5rem 0.7rem;
   cursor: pointer;
+  background: #03bc4a;
+  transition: ease-in 0.2s;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+}
+button:hover{
+  transform: scale(1.05);
+  transition: ease-in 0.2s;
 }
 
 /* ---------- SCROLLBAR (optional) ---------- */
@@ -252,3 +324,4 @@ button {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
 }
+

@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "email": "ridestatus07@gmail.com",
+    "passwordHash": "$2b$10$Mzchlrf8Ygxki7kI7s1GC.71MkBgRQPaeAXUMwI1T4Y3K5FhAU.GS",
+    "username": "navneetranjan07"
+  },
+  {
+    "email": "navnitranjan919904@gmail.com",
+    "passwordHash": "$2b$10$pUfekW0p0NEkpBR.Hz4M8uGk68REc5JwDNclzaFVxfGwY/Yw6netq",
+    "username": "navneetranjan007"
+  }
+]

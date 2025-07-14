@@ -33,7 +33,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Multer for file uploads
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, join(__dirname, 'public', 'uploads')),
   filename: (req, file, cb) => {
@@ -50,18 +50,18 @@ function readUsers() {
 function writeUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
-function sendOTP(email, otp) {
+function sendOTP(email, otp, purpose = 'Signup') {
   return transporter.sendMail({
     from: 'Realtime Chat App <your-email@gmail.com>',
     to: email,
-    subject: 'Your OTP for Signup',
-    text: `Your OTP is: ${otp}`
+    subject: `${purpose} OTP`,
+    text: `Your OTP for ${purpose.toLowerCase()} is: ${otp}`
   });
 }
 
 // --- Auth Routes ---
 
-// Request OTP
+// Request OTP for signup
 app.post('/signup/request-otp', async (req, res) => {
   const { email, username } = req.body;
   const users = readUsers();
@@ -69,10 +69,10 @@ app.post('/signup/request-otp', async (req, res) => {
     return res.status(400).json({ success: false, message: 'User already exists' });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  OTP_STORE[email] = { otp, username, timestamp: Date.now() };
+  OTP_STORE[email] = { otp, username, timestamp: Date.now(), purpose: 'signup' };
 
   try {
-    await sendOTP(email, otp);
+    await sendOTP(email, otp, 'Signup');
     res.json({ success: true, message: 'OTP sent to your email' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to send OTP' });
@@ -83,7 +83,7 @@ app.post('/signup/request-otp', async (req, res) => {
 app.post('/signup/verify', async (req, res) => {
   const { email, password, username, otp } = req.body;
   const record = OTP_STORE[email];
-  if (!record || record.otp !== otp)
+  if (!record || record.otp !== otp || record.purpose !== 'signup')
     return res.status(400).json({ success: false, message: 'Invalid OTP' });
 
   const users = readUsers();
@@ -113,6 +113,45 @@ app.post('/login', async (req, res) => {
   res.json({ success: true, token });
 });
 
+// --- Password Reset ---
+
+// Step 1: Request OTP
+app.post('/reset-password/request', async (req, res) => {
+  const { email } = req.body;
+  const users = readUsers();
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(400).json({ success: false, message: 'User not found' });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  OTP_STORE[email] = { otp, timestamp: Date.now(), purpose: 'reset' };
+
+  try {
+    await sendOTP(email, otp, 'Reset Password');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+// Step 2: Verify OTP & Change Password
+app.post('/reset-password/verify', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  const record = OTP_STORE[email];
+  if (!record || record.otp !== otp || record.purpose !== 'reset') {
+    return res.status(400).json({ success: false, message: 'Invalid OTP' });
+  }
+
+  const users = readUsers();
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(400).json({ success: false, message: 'User not found' });
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  writeUsers(users);
+  delete OTP_STORE[email];
+
+  res.json({ success: true, message: 'Password has been reset' });
+});
+
 // --- File Upload ---
 app.post('/upload', upload.single('file'), (req, res) => {
   const file = req.file;
@@ -129,7 +168,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// --- Socket.IO Auth Middleware ---
+// --- Socket.IO Auth ---
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth.token;
@@ -141,7 +180,7 @@ io.use((socket, next) => {
   }
 });
 
-// --- Realtime Logic ---
+// --- Realtime Chat ---
 io.on('connection', socket => {
   const user = readUsers().find(u => u.email === socket.user.email);
   const username = user?.username || 'Anonymous';
@@ -156,7 +195,7 @@ io.on('connection', socket => {
     });
   });
 
-  socket.on('typing', ({ username } = {}) => {
+  socket.on('typing', ({ username }) => {
     socket.broadcast.emit('typing', { username });
   });
 
