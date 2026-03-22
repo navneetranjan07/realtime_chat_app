@@ -61,7 +61,6 @@ align-items: center;
 }
 
 #auth-container span1{
-  /* color: yellow; */
   background: linear-gradient(295deg, rgba(0, 0, 0, 0.618) 27%, rgba(196, 196, 6, 0.607) 100%);
   background-size: cover;
   background-clip: text;
